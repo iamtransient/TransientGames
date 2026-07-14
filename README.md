@@ -15,7 +15,7 @@ No build step. No installs. Every game is one `.html` file you can open directly
 | ♟️ Chess | [`chess.html`](./chess.html) | Full two-player chess with legal move validation, check/checkmate detection, and captured-piece tracking. |
 | ⭕ Tic Tac Toe | [`tic-tac-toe.html`](./tic-tac-toe.html) | Classic 3×3 grid with single-player (minimax AI) and two-player modes. |
 | 🧱 Tetris | [`tetris.html`](./tetris.html) | 90s-style Tetris with SRS rotation, hold/ghost piece, 7-bag randomizer, and full mobile controls. |
-| 🔦 Laser Reflection Puzzle | [`laser-puzzle.html`](./laser-puzzle.html) | 42 hand-verified levels across mirrors, splitters, prisms, and portals, with a built-in level editor. |
+
 
 ## 🚀 Getting Started
 
@@ -49,7 +49,6 @@ transient-mini-games/
 ├── chess.html
 ├── tic-tac-toe.html
 ├── tetris.html
-├── laser-puzzle.html
 └── README.md
 ```
 
