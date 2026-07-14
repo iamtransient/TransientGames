@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Transient Tower of Hanoi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #030305;
+            --grid-color: rgba(0, 242, 254, 0.1);
+            --neon-blue: #00f2fe;
+            --neon-pink: #ff007f;
+            --neon-purple: #9d00ff;
+            --text-color: #e0e6ed;
+            --glow-blue: 0 0 15px rgba(0, 242, 254, 0.5);
+            --glow-pink: 0 0 15px rgba(255, 0, 127, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-align: center;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 242, 254, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        button, select {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--grid-color);
+            padding: 10px;
+            color: var(--text-color);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+
+        button:hover, button.active {
+            border-color: var(--neon-blue);
+            box-shadow: var(--glow-blue);
+            background: rgba(0, 242, 254, 0.05);
+            color: #fff;
+        }
+
+        select {
+            outline: none;
+            appearance: none;
+            text-align-last: center;
+        }
+        select option {
+            background: #0a0a10;
+            color: #fff;
+        }
+
+        .game-layouts {
+            display: flex;
+            width: 100%;
+            gap: 40px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .player-panel {
+            flex: 1;
+            min-width: 340px;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .stats {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            color: var(--neon-blue);
+        }
+
+        /* Tower System Graphics */
+        .hanoi-board {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            width: 100%;
+            height: 200px;
+            position: relative;
+            border-bottom: 2px solid rgba(0, 242, 254, 0.3);
+            padding-bottom: 2px;
+            margin-bottom: 15px;
+        }
+
+        .peg {
+            width: 30%;
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Futuristic Peg Center Line */
+        .peg::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            height: 85%;
+            background: linear-gradient(to top, rgba(0,242,254,0.4), rgba(0,242,254,0.05));
+            transition: all 0.3s;
+        }
+
+        .peg.selected::before {
+            background: linear-gradient(to top, var(--neon-blue), rgba(0,242,254,0.2));
+            box-shadow: var(--glow-blue);
+            width: 4px;
+        }
+
+        .player2 .peg::before {
+            background: linear-gradient(to top, rgba(255,0,127,0.4), rgba(255,0,127,0.05));
+        }
+        .player2 .peg.selected::before {
+            background: linear-gradient(to top, var(--neon-pink), rgba(255,0,127,0.2));
+            box-shadow: var(--glow-pink);
+            width: 4px;
+        }
+
+        /* Minimal Holographic Rings */
+        .ring {
+            height: 16px;
+            border-radius: 2px;
+            margin-bottom: 2px;
+            transition: transform 0.2s, bottom 0.3s;
+            z-index: 5;
+            box-shadow: inset 0 0 8px rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Action Controls Footer */
+        .footer-controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #aiLog {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            height: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="container">
+        <h1>Transient Hanoi</h1>
+        
+        <div class="controls">
+            <button id="singleBtn" class="active" onclick="setMode('single')">Single / AI</button>
+            <button id="multiBtn" onclick="setMode('multi')">Multiplayer</button>
+            <select id="diskCount" onchange="initGame()">
+                <option value="3">3 Nodes</option>
+                <option value="4" selected>4 Nodes</option>
+                <option value="5">5 Nodes</option>
+                <option value="6">6 Nodes</option>
+            </select>
+        </div>
+
+        <div id="aiLog">SYSTEM READY</div>
+
+        <div class="game-layouts">
+            <!-- Player 1 / AI Panel -->
+            <div class="player-panel" id="p1Panel">
+                <div class="panel-title" id="p1Title">ALPHA PROTOCAL (P1)</div>
+                <div class="stats" id="p1Stats">MOVES: 0</div>
+                <div class="hanoi-board" id="board1">
+                    <div class="peg" data-peg="0" onclick="handlePegClick(1, 0)"></div>
+                    <div class="peg" data-peg="1" onclick="handlePegClick(1, 1)"></div>
+                    <div class="peg" data-peg="2" onclick="handlePegClick(1, 2)"></div>
+                </div>
+            </div>
+
+            <!-- Player 2 Panel (Hidden in Single Player) -->
+            <div class="player-panel" id="p2Panel" style="display: none;">
+                <div class="panel-title" style="color: var(--neon-pink);">OMEGA PROTOCOL (P2)</div>
+                <div class="stats" id="p2Stats" style="color: var(--neon-pink);">MOVES: 0</div>
+                <div class="hanoi-board player2" id="board2">
+                    <div class="peg" data-peg="0" onclick="handlePegClick(2, 0)"></div>
+                    <div class="peg" data-peg="1" onclick="handlePegClick(2, 1)"></div>
+                    <div class="peg" data-peg="2" onclick="handlePegClick(2, 2)"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-controls">
+            <button onclick="initGame()">Reset Systems</button>
+            <button id="aiSolveBtn" onclick="triggerAISolve()">Run AI Auto-Solve</button>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME CORE CONFIG ---
+        let gameMode = 'single';
+        let diskCount = 4;
+        let p1State = [[], [], []];
+        let p2State = [[], [], []];
+        let p1Moves = 0;
+        let p2Moves = 0;
+        let p1SelectedPeg = null;
+        let p2SelectedPeg = null;
+        let isGameActive = true;
+        let aiTimeoutId = null;
+
+        // Custom Cyberpunk Neon Hues for Blocks
+        const nodeColors = [
+            '#00f2fe', '#4facfe', '#7f00ff', '#ff007f', '#ff4b2b', '#ff416c'
+        ];
+
+        function setMode(mode) {
+            gameMode = mode;
+            document.getElementById('singleBtn').classList.toggle('active', mode === 'single');
+            document.getElementById('multiBtn').classList.toggle('active', mode === 'multi');
+            document.getElementById('p2Panel').style.display = mode === 'multi' ? 'flex' : 'none';
+            document.getElementById('aiSolveBtn').style.display = mode === 'single' ? 'block' : 'none';
+            document.getElementById('p1Title').innerText = mode === 'single' ? 'USER MATRIX' : 'ALPHA PROTOCOL (P1)';
+            initGame();
+        }
+
+        function initGame() {
+            // Halt any running AI operations
+            if (aiTimeoutId) clearTimeout(aiTimeoutId);
+            
+            diskCount = parseInt(document.getElementById('diskCount').value);
+            p1State = [[], [], []];
+            p2State = [[], [], []];
+            p1Moves = 0;
+            p2Moves = 0;
+            p1SelectedPeg = null;
+            p2SelectedPeg = null;
+            isGameActive = true;
+            document.getElementById('aiLog').innerText = "SYSTEM ACTIVE";
+
+            // Push nodes down from largest to smallest onto Peg 0
+            for (let i = diskCount; i > 0; i--) {
+                p1State[0].push(i);
+                if (gameMode === 'multi') p2State[0].push(i);
+            }
+
+            renderBoards();
+        }
+
+        // --- GRAPHICS RENDERING SYSTEM ---
+        function renderBoards() {
+            renderPanel(1, p1State, p1SelectedPeg, 'p1Stats', p1Moves);
+            if (gameMode === 'multi') {
+                renderPanel(2, p2State, p2SelectedPeg, 'p2Stats', p2Moves);
+            }
+        }
+
+        function renderPanel(playerNum, state, selectedPeg, statsId, moveCount) {
+            document.getElementById(statsId).innerText = `MOVES: ${moveCount}`;
+            const boardElement = document.getElementById(`board${playerNum}`);
+            const pegElements = boardElement.querySelectorAll('.peg');
+
+            pegElements.forEach((pegEl, pegIdx) => {
+                // Clear existing rings
+                const rings = pegEl.querySelectorAll('.ring');
+                rings.forEach(r => r.remove());
+
+                if (selectedPeg === pegIdx) {
+                    pegEl.classList.add('selected');
+                } else {
+                    pegEl.classList.remove('selected');
+                }
+
+                // Append interactive Rings
+                state[pegIdx].forEach(diskSize => {
+                    const ring = document.createElement('div');
+                    ring.classList.add('ring');
+                    
+                    // Procedural size based on window width and configuration
+                    const widthPercent = 30 + ((diskSize / diskCount) * 65);
+                    ring.style.width = `${widthPercent}%`;
+                    
+                    // Assign futuristic coloring array maps
+                    const baseColor = nodeColors[(diskSize - 1) % nodeColors.length];
+                    ring.style.backgroundColor = 'rgba(255,255,255,0.02)';
+                    ring.style.borderColor = baseColor;
+                    ring.style.boxShadow = `0 0 10px ${baseColor}40, inset 0 0 6px ${baseColor}30`;
+
+                    pegEl.appendChild(ring);
+                });
+            });
+        }
+
+        // --- INTERACTION LOGIC ---
+        function handlePegClick(playerNum, pegIdx) {
+            if (!isGameActive) return;
+            
+            if (playerNum === 1) {
+                processMoveRequest(1, pegIdx);
+            } else {
+                processMoveRequest(2, pegIdx);
+            }
+        }
+
+        function processMoveRequest(playerNum, pegIdx) {
+            let state = playerNum === 1 ? p1State : p2State;
+            let selectedPeg = playerNum === 1 ? p1SelectedPeg : p2SelectedPeg;
+
+            if (selectedPeg === null) {
+                // First Select: Grab top disk if it exists
+                if (state[pegIdx].length > 0) {
+                    if (playerNum === 1) p1SelectedPeg = pegIdx;
+                    else p2SelectedPeg = pegIdx;
+                }
+            } else {
+                // Second Select: Attempt move execution
+                if (selectedPeg !== pegIdx) {
+                    const sourcePeg = state[selectedPeg];
+                    const targetPeg = state[pegIdx];
+
+                    if (targetPeg.length === 0 || sourcePeg[sourcePeg.length - 1] < targetPeg[targetPeg.length - 1]) {
+                        targetPeg.push(sourcePeg.pop());
+                        if (playerNum === 1) p1Moves++; else p2Moves++;
+                        checkWinCondition(playerNum, state);
+                    }
+                }
+                // De-select systems
+                if (playerNum === 1) p1SelectedPeg = null;
+                else p2SelectedPeg = null;
+            }
+            renderBoards();
+        }
+
+        function checkWinCondition(playerNum, state) {
+            // If all pieces have successfully shifted cleanly onto Peg 2 (index 2)
+            if (state[2].length === diskCount) {
+                isGameActive = false;
+                const winnerName = (gameMode === 'single') 
+                    ? 'MATRIX SOLVED' 
+                    : (playerNum === 1 ? 'ALPHA VECTOR VICTORIOUS' : 'OMEGA VECTOR VICTORIOUS');
+                document.getElementById('aiLog').innerText = winnerName;
+            }
+        }
+
+        // --- AI AUTO-SOLVER ENGINE (RECURSIVE MINIMAX DESIGN) ---
+        let aiMovesList = [];
+
+        function triggerAISolve() {
+            initGame();
+            document.getElementById('aiLog').innerText = "CALCULATING TRAJECTORY...";
+            aiMovesList = [];
+            calculateHanoiMoves(diskCount, 0, 2, 1);
+            executeNextAIMove();
+        }
+
+        function calculateHanoiMoves(n, from, to, aux) {
+            if (n === 1) {
+                aiMovesList.push({ from, to });
+                return;
+            }
+            calculateHanoiMoves(n - 1, from, aux, to);
+            aiMovesList.push({ from, to });
+            calculateHanoiMoves(n - 1, aux, to, from);
+        }
+
+        function executeNextAIMove() {
+            if (aiMovesList.length === 0) {
+                document.getElementById('aiLog').innerText = "AI OPTIMIZATION COMPLETE";
+                isGameActive = false;
+                return;
+            }
+
+            const step = aiMovesList.shift();
+            p1State[step.to].push(p1State[step.from].pop());
+            p1Moves++;
+            
+            document.getElementById('aiLog').innerText = `AI AUTO RUN: PEG ${step.from + 1} ➔ PEG ${step.to + 1}`;
+            renderBoards();
+
+            // Dynamic velocity pacing adjustment based on stack size
+            const delay = diskCount > 4 ? 250 : 450;
+            aiTimeoutId = setTimeout(executeNextAIMove, delay);
+        }
+
+        // --- VISUALS: BACKGROUND AMBIENT GRID FLUIDS ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class BackgroundParticle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.2 + 0.4;
+                this.speedY = -(Math.random() * 0.3 + 0.1);
+                this.alpha = Math.random() * 0.3 + 0.05;
+            }
+            update() {
+                this.y += this.speedY;
+                if (this.y < 0) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(0, 242, 254, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        for (let i = 0; i < 40; i++) particles.push(new BackgroundParticle());
+        animate();
+        initGame();
+    </script>
+</body>
+</html>

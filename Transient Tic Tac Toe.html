@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transient Tic Tac Toe</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --bg: #05070a;
+    --panel: #0a0f16;
+    --line: rgba(0, 229, 255, 0.12);
+    --line-strong: rgba(0, 229, 255, 0.28);
+    --cyan: #00e6ff;
+    --violet: #9b6bff;
+    --text: #dfeaf0;
+    --muted: #5c7080;
+    --win: #39ff9a;
+    --focus: #00e6ff;
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0; padding:0; min-height:100vh;
+    background:
+      radial-gradient(circle at 20% 0%, #0d1c2a 0%, transparent 45%),
+      radial-gradient(circle at 100% 100%, #150e28 0%, transparent 42%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    -webkit-font-smoothing: antialiased;
+    display:flex;
+    justify-content:center;
+  }
+
+  .app{
+    width: 100%;
+    max-width: 460px;
+    padding: 40px 20px 60px;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+  }
+
+  header{
+    text-align:center;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    gap: 6px;
+  }
+  .mark{
+    width: 9px; height: 9px;
+    background: var(--cyan);
+    box-shadow: 0 0 10px var(--cyan), 0 0 18px var(--cyan);
+    transform: rotate(45deg);
+    margin-bottom: 4px;
+  }
+  h1{
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: clamp(17px, 5.4vw, 24px);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin: 0;
+    white-space: nowrap;
+  }
+  h1 span{ color: var(--cyan); }
+  .subtitle{
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .status{
+    width:100%;
+    text-align:center;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .status .x{ color: var(--cyan); font-weight:700; }
+  .status .o{ color: var(--violet); font-weight:700; }
+  .status.win{ border-color: rgba(57,255,154,0.5); box-shadow: 0 0 16px rgba(57,255,154,0.15); }
+  .status.lose{ border-color: rgba(255,77,94,0.5); box-shadow: 0 0 16px rgba(255,77,94,0.15); }
+  .status.draw{ border-color: rgba(155,107,255,0.5); box-shadow: 0 0 16px rgba(155,107,255,0.15); }
+
+  .board{
+    position: relative;
+    width: min(80vw, 340px);
+    aspect-ratio: 1/1;
+    display:grid;
+    grid-template-columns: repeat(3,1fr);
+    grid-template-rows: repeat(3,1fr);
+    gap: 2px;
+    background: var(--line);
+    border: 1px solid var(--line-strong);
+  }
+
+  .cell{
+    background: var(--panel);
+    border: none;
+    display:flex; align-items:center; justify-content:center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(30px, 8vw, 48px);
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    padding:0;
+  }
+  .cell:hover:not(.filled){ background: rgba(0,230,255,0.05); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .cell:focus-visible{ outline: 2px solid var(--focus); outline-offset: -2px; }
+  .cell.filled{ cursor: default; }
+
+  .cell .glyph{ animation: fadeIn 0.22s ease forwards; }
+  @keyframes fadeIn{ from{ opacity:0; transform: scale(0.5);} to{ opacity:1; transform: scale(1);} }
+
+  .cell.mark-x .glyph{ color: var(--cyan); text-shadow: 0 0 12px rgba(0,230,255,0.6); }
+  .cell.mark-o .glyph{ color: var(--violet); text-shadow: 0 0 12px rgba(155,107,255,0.6); }
+
+  .cell.win-cell{
+    background: rgba(57,255,154,0.08);
+    animation: pulseWin 1s ease-in-out infinite;
+  }
+  .cell.win-cell .glyph{ color: var(--win) !important; text-shadow: 0 0 14px rgba(57,255,154,0.7) !important; }
+  @keyframes pulseWin{
+    0%,100%{ box-shadow: inset 0 0 0 1px rgba(57,255,154,0.4); }
+    50%{ box-shadow: inset 0 0 0 1px rgba(57,255,154,0.8); }
+  }
+
+  .controls{
+    width:100%;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    gap: 16px;
+  }
+
+  .row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+
+  button{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid var(--line-strong);
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  button:hover{ background: rgba(0,230,255,0.08); box-shadow: 0 0 10px rgba(0,230,255,0.15); }
+  button:focus-visible{ outline: 2px solid var(--focus); outline-offset: 2px; }
+  button.active{ background: var(--cyan); color: var(--bg); box-shadow: 0 0 12px rgba(0,230,255,0.4); }
+
+  .diff-group{ display:flex; gap:6px; }
+  .diff-group button{ padding: 8px 12px; font-size: 10px; }
+  .diff-group.disabled{ opacity: 0.35; pointer-events: none; }
+
+  .mode-group{ display:flex; gap:6px; }
+  .mode-group button{ padding: 9px 14px; font-size: 11px; }
+
+  .scoreboard{
+    width:100%;
+    display:grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 8px;
+  }
+  .score{
+    text-align:center;
+    padding: 12px 4px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .score .label{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color: var(--muted); display:block; margin-bottom:4px; }
+  .score .value{ font-family:'Orbitron', sans-serif; font-size:20px; font-weight:700; }
+  .score.player .value{ color: var(--cyan); }
+  .score.ai .value{ color: var(--violet); }
+  .score.draw .value{ color: var(--text); }
+
+  footer{
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span class="mark"></span>
+    <h1>Transient <span>Tic Tac Toe</span></h1>
+    <div class="subtitle">single player &middot; local inference</div>
+  </header>
+
+  <div class="status" id="status">Your move — place <span class="x">X</span></div>
+
+  <div class="board" id="board"></div>
+
+  <div class="controls">
+    <div class="row">
+      <button id="newGameBtn">New Game</button>
+    </div>
+    <div class="row">
+      <span style="align-self:center; font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase;">Mode</span>
+      <div class="mode-group" id="modeGroup">
+        <button data-m="1p" class="active">1 Player</button>
+        <button data-m="2p">2 Player</button>
+      </div>
+    </div>
+    <div class="row">
+      <span style="align-self:center; font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase;">Difficulty</span>
+      <div class="diff-group" id="diffGroup">
+        <button data-d="easy">Easy</button>
+        <button data-d="hard" class="active">Hard</button>
+      </div>
+    </div>
+    <div class="scoreboard">
+      <div class="score player"><span class="label" id="labelP1">You</span><span class="value" id="scoreP">0</span></div>
+      <div class="score draw"><span class="label">Draw</span><span class="value" id="scoreD">0</span></div>
+      <div class="score ai"><span class="label" id="labelP2">AI</span><span class="value" id="scoreA">0</span></div>
+    </div>
+  </div>
+
+  <footer id="footerNote">Hard mode uses a perfect minimax search — it cannot be beaten.</footer>
+</div>
+
+<script>
+(function(){
+  const LINES = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  const HUMAN = 'X', AI = 'O';
+
+  let board = Array(9).fill(null);
+  let over = false;
+  let difficulty = 'hard';
+  let mode = '1p'; // '1p' = vs AI, '2p' = local two-player
+  let currentTurn = HUMAN;
+  let scores = {player:0, ai:0, draw:0};
+
+  const boardEl = document.getElementById('board');
+  const statusEl = document.getElementById('status');
+  const scorePEl = document.getElementById('scoreP');
+  const scoreDEl = document.getElementById('scoreD');
+  const scoreAEl = document.getElementById('scoreA');
+  const diffGroup = document.getElementById('diffGroup');
+  const modeGroup = document.getElementById('modeGroup');
+  const labelP1 = document.getElementById('labelP1');
+  const labelP2 = document.getElementById('labelP2');
+  const footerNote = document.getElementById('footerNote');
+
+  try{
+    const saved = JSON.parse(localStorage.getItem('transientChessScores') || 'null');
+    if(saved) scores = saved;
+  } catch(e){}
+
+  function saveScores(){
+    localStorage.setItem('transientChessScores', JSON.stringify(scores));
+  }
+
+  function winningLine(b){
+    for(const line of LINES){
+      const [a,c,d] = line;
+      if(b[a] && b[a]===b[c] && b[a]===b[d]) return line;
+    }
+    return null;
+  }
+  function isFull(b){ return b.every(c => c!==null); }
+  function empties(b){ const r=[]; b.forEach((v,i)=>{ if(v===null) r.push(i); }); return r; }
+
+  function minimax(b, depth, maximizing){
+    const line = winningLine(b);
+    if(line){
+      const w = b[line[0]];
+      if(w===AI) return 10-depth;
+      if(w===HUMAN) return depth-10;
+    }
+    if(isFull(b)) return 0;
+
+    if(maximizing){
+      let best = -Infinity;
+      for(const i of empties(b)){
+        b[i] = AI;
+        best = Math.max(best, minimax(b, depth+1, false));
+        b[i] = null;
+      }
+      return best;
+    } else {
+      let best = Infinity;
+      for(const i of empties(b)){
+        b[i] = HUMAN;
+        best = Math.min(best, minimax(b, depth+1, true));
+        b[i] = null;
+      }
+      return best;
+    }
+  }
+
+  function bestMove(b){
+    let best = -Infinity, move = null;
+    for(const i of empties(b)){
+      b[i] = AI;
+      const score = minimax(b, 0, false);
+      b[i] = null;
+      if(score > best){ best = score; move = i; }
+    }
+    return move;
+  }
+
+  function randomMove(b){
+    const e = empties(b);
+    return e[Math.floor(Math.random()*e.length)];
+  }
+
+  function aiMove(b){
+    if(difficulty === 'easy') return randomMove(b);
+    return bestMove(b);
+  }
+
+  function buildBoard(){
+    boardEl.innerHTML = '';
+    for(let i=0;i<9;i++){
+      const cell = document.createElement('button');
+      cell.className = 'cell';
+      cell.dataset.i = i;
+      const v = board[i];
+      if(v){
+        cell.classList.add('filled', v===HUMAN ? 'mark-x' : 'mark-o');
+        const span = document.createElement('span');
+        span.className = 'glyph';
+        span.textContent = v;
+        cell.appendChild(span);
+        cell.disabled = true;
+      }
+      cell.addEventListener('click', () => handleClick(i));
+      boardEl.appendChild(cell);
+    }
+  }
+
+  function setStatus(html, cls){
+    statusEl.innerHTML = html;
+    statusEl.className = 'status' + (cls ? ' '+cls : '');
+  }
+
+  function handleClick(i){
+    if(over || board[i] !== null) return;
+
+    if(mode === '2p'){
+      board[i] = currentTurn;
+      buildBoard();
+
+      const line = winningLine(board);
+      if(line) return endGame(currentTurn === HUMAN ? 'player' : 'ai', line);
+      if(isFull(board)) return endGame('draw');
+
+      currentTurn = currentTurn === HUMAN ? AI : HUMAN;
+      setStatus(currentTurn === HUMAN
+        ? 'Player 1\'s move — place <span class="x">X</span>'
+        : 'Player 2\'s move — place <span class="o">O</span>');
+      return;
+    }
+
+    // single-player vs AI
+    board[i] = HUMAN;
+    buildBoard();
+
+    const line = winningLine(board);
+    if(line) return endGame('player', line);
+    if(isFull(board)) return endGame('draw');
+
+    setStatus('Engine thinking<span class="o">…</span>');
+    setTimeout(() => {
+      const m = aiMove(board);
+      if(m !== null && m !== undefined){
+        board[m] = AI;
+        buildBoard();
+      }
+      const line2 = winningLine(board);
+      if(line2) return endGame('ai', line2);
+      if(isFull(board)) return endGame('draw');
+      setStatus('Your move — place <span class="x">X</span>');
+    }, 350);
+  }
+
+  function endGame(result, line){
+    over = true;
+    if(line){
+      line.forEach(i => {
+        const el = boardEl.children[i];
+        el.classList.add('win-cell');
+      });
+    }
+    if(result === 'player'){
+      scores.player++;
+      setStatus(mode === '2p' ? 'Player 1 wins' : 'You win', 'win');
+    } else if(result === 'ai'){
+      scores.ai++;
+      setStatus(mode === '2p' ? 'Player 2 wins' : 'Engine wins', 'lose');
+    } else {
+      scores.draw++;
+      setStatus('Draw', 'draw');
+    }
+    scorePEl.textContent = scores.player;
+    scoreDEl.textContent = scores.draw;
+    scoreAEl.textContent = scores.ai;
+    saveScores();
+    [...boardEl.children].forEach(c => c.disabled = true);
+  }
+
+  document.getElementById('newGameBtn').addEventListener('click', () => {
+    board = Array(9).fill(null);
+    over = false;
+    currentTurn = HUMAN;
+    setStatus(mode === '2p'
+      ? 'Player 1\'s move — place <span class="x">X</span>'
+      : 'Your move — place <span class="x">X</span>');
+    buildBoard();
+  });
+
+  diffGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if(!btn || mode === '2p') return;
+    [...diffGroup.children].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    difficulty = btn.dataset.d;
+  });
+
+  modeGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    [...modeGroup.children].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.m;
+
+    diffGroup.classList.toggle('disabled', mode === '2p');
+    labelP1.textContent = mode === '2p' ? 'Player 1' : 'You';
+    labelP2.textContent = mode === '2p' ? 'Player 2' : 'AI';
+    footerNote.textContent = mode === '2p'
+      ? 'Local two-player — take turns on the same device.'
+      : 'Hard mode uses a perfect minimax search — it cannot be beaten.';
+
+    board = Array(9).fill(null);
+    over = false;
+    currentTurn = HUMAN;
+    setStatus(mode === '2p'
+      ? 'Player 1\'s move — place <span class="x">X</span>'
+      : 'Your move — place <span class="x">X</span>');
+    buildBoard();
+  });
+
+  scorePEl.textContent = scores.player;
+  scoreDEl.textContent = scores.draw;
+  scoreAEl.textContent = scores.ai;
+  buildBoard();
+})();
+</script>
+</body>
+</html>
