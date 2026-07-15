@@ -10,11 +10,11 @@ No build step. No installs. Every game is one `.html` file you can open directly
 
 | Game | File | Description |
 |---|---|---|
-| 🧩 Number Sliding Puzzle | [`slide-puzzle.html`](./slide-puzzle.html) | Classic 15-puzzle with 3×3/4×4/5×5 modes, smooth GPU-accelerated tile animations, move counter, timer, and saved best scores. |
-| 🗼 Tower of Hanoi | [`tower-of-hanoi.html`](./tower-of-hanoi.html) | Move the stack between pegs in the fewest moves, with adjustable disk count and move validation. |
-| ♟️ Chess | [`chess.html`](./chess.html) | Full two-player chess with legal move validation, check/checkmate detection, and captured-piece tracking. |
-| ⭕ Tic Tac Toe | [`tic-tac-toe.html`](./tic-tac-toe.html) | Classic 3×3 grid with single-player (minimax AI) and two-player modes. |
-| 🧱 Tetris | [`tetris.html`](./tetris.html) | 90s-style Tetris with SRS rotation, hold/ghost piece, 7-bag randomizer, and full mobile controls. |
+| 🧩 Number Sliding Puzzle | [`slide-puzzle.html`] | Classic 15-puzzle with 3×3/4×4/5×5 modes, smooth GPU-accelerated tile animations, move counter, timer, and saved best scores. |
+| 🗼 Tower of Hanoi | [`tower-of-hanoi.html`] | Move the stack between pegs in the fewest moves, with adjustable disk count and move validation. |
+| ♟️ Chess | [`chess.html`] | Full two-player chess with legal move validation, check/checkmate detection, and captured-piece tracking. |
+| ⭕ Tic Tac Toe | [`tic-tac-toe.html`] | Classic 3×3 grid with single-player (minimax AI) and two-player modes. |
+| 🧱 Tetris | [`tetris.html`] | 90s-style Tetris with SRS rotation, hold/ghost piece, 7-bag randomizer, and full mobile controls. |
 
 
 ## 🚀 Getting Started
@@ -62,4 +62,4 @@ Issues and PRs are welcome — new games, bug fixes, or performance tweaks all f
 
 ## 📄 License
 
-MIT — see [LICENSE](./LICENSE) for details.
+MIT — see [LICENSE] for details.
